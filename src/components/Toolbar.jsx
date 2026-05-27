@@ -26,6 +26,17 @@ const PALETTE = [
   '#757575','#9E9E9E','#BDBDBD','#E0E0E0','#ECEFF1','#FFFFFF',
 ]
 
+const label = {
+  display: 'block',
+  fontFamily: 'var(--font-ui)',
+  fontSize: 9,
+  fontWeight: 500,
+  letterSpacing: '0.1em',
+  textTransform: 'uppercase',
+  color: 'var(--color-text-tertiary)',
+  marginBottom: 6,
+}
+
 export default function Toolbar({
   brushType, setBrushType,
   brushSize, setBrushSize,
@@ -37,31 +48,41 @@ export default function Toolbar({
   const colorInputRef = useRef(null)
   const isV = orientation === 'vertical'
 
-  const section = 'mb-4'
-  const label = 'text-xs uppercase tracking-wider mb-2 block'
-
   return (
     <div
-      className={`flex ${isV ? 'flex-col' : 'flex-row flex-wrap gap-x-6'} p-3 rounded-xl`}
-      style={{ background: 'var(--surface)', border: '1px solid var(--border)', minWidth: isV ? 120 : undefined }}
+      style={{
+        display: 'flex',
+        flexDirection: isV ? 'column' : 'row',
+        flexWrap: isV ? undefined : 'wrap',
+        gap: isV ? 16 : '0 24px',
+        padding: 12,
+        background: 'var(--color-surface)',
+        border: '1px solid var(--color-border)',
+        borderRadius: 0,
+        minWidth: isV ? 116 : undefined,
+      }}
     >
       {/* Brush type */}
-      <div className={isV ? section : ''}>
-        <span className={label} style={{ color: 'var(--text-muted)' }}>Brush</span>
-        <div className={`grid grid-cols-3 gap-1`}>
+      <div>
+        <span style={label}>Brush</span>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 3 }}>
           {BRUSH_TYPES.map(b => (
             <button
               key={b.id}
               title={b.title}
               disabled={disabled}
               onClick={() => setBrushType(b.id)}
-              className="rounded p-1 text-lg leading-none transition-all"
               style={{
-                background: brushType === b.id ? 'var(--gold)' : 'transparent',
-                color: brushType === b.id ? '#0f0e0c' : 'var(--text)',
-                border: '1px solid ' + (brushType === b.id ? 'var(--gold)' : 'var(--border)'),
-                opacity: disabled ? 0.4 : 1,
+                padding: '4px 2px',
+                fontSize: 15,
+                lineHeight: 1,
+                background: brushType === b.id ? 'var(--color-text-primary)' : 'transparent',
+                color: brushType === b.id ? 'var(--color-white)' : 'var(--color-text-secondary)',
+                border: '1px solid ' + (brushType === b.id ? 'var(--color-text-primary)' : 'var(--color-border)'),
+                borderRadius: 0,
                 cursor: disabled ? 'not-allowed' : 'pointer',
+                opacity: disabled ? 0.4 : 1,
+                transition: 'background 0.1s, color 0.1s',
               }}
             >
               {b.label}
@@ -71,40 +92,63 @@ export default function Toolbar({
       </div>
 
       {/* Size */}
-      <div className={isV ? section : ''}>
-        <span className={label} style={{ color: 'var(--text-muted)' }}>Size</span>
-        <div className="flex flex-col gap-1">
+      <div>
+        <span style={label}>Size</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {SIZES.map(s => (
             <button
               key={s}
               disabled={disabled}
               onClick={() => setBrushSize(s)}
-              className="flex items-center gap-2 px-2 py-1 rounded text-sm transition-all"
               style={{
-                background: brushSize === s ? '#2e2c29' : 'transparent',
-                border: '1px solid ' + (brushSize === s ? 'var(--gold)' : 'transparent'),
-                color: 'var(--text)',
-                opacity: disabled ? 0.4 : 1,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 7,
+                padding: '3px 6px',
+                background: brushSize === s ? 'var(--color-text-primary)' : 'transparent',
+                border: '1px solid ' + (brushSize === s ? 'var(--color-text-primary)' : 'transparent'),
+                borderRadius: 0,
                 cursor: disabled ? 'not-allowed' : 'pointer',
+                opacity: disabled ? 0.4 : 1,
               }}
             >
               <span
-                className="rounded-full inline-block flex-shrink-0"
-                style={{ width: Math.max(s, 4), height: Math.max(s, 4), background: color, maxWidth: 24, maxHeight: 24 }}
+                style={{
+                  width: Math.min(Math.max(s, 4), 20),
+                  height: Math.min(Math.max(s, 4), 20),
+                  borderRadius: '50%',
+                  flexShrink: 0,
+                  background: color,
+                  display: 'inline-block',
+                }}
               />
-              <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>{s}px</span>
+              <span style={{
+                fontFamily: 'var(--font-ui)',
+                fontSize: 10,
+                color: brushSize === s ? 'var(--color-white)' : 'var(--color-text-tertiary)',
+              }}>
+                {s}px
+              </span>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Active color swatch */}
-      <div className={isV ? section : ''}>
-        <span className={label} style={{ color: 'var(--text-muted)' }}>Color</span>
+      {/* Color */}
+      <div>
+        <span style={label}>Color</span>
         <button
           onClick={() => colorInputRef.current?.click()}
-          className="w-full h-8 rounded mb-2 border"
-          style={{ background: color, borderColor: 'var(--border)', cursor: 'pointer' }}
+          style={{
+            width: '100%',
+            height: 28,
+            background: color,
+            border: '1px solid var(--color-border)',
+            borderRadius: 0,
+            cursor: 'pointer',
+            display: 'block',
+            marginBottom: 6,
+          }}
           title="Custom color"
         />
         <input
@@ -112,68 +156,95 @@ export default function Toolbar({
           type="color"
           value={color}
           onChange={e => setColor(e.target.value)}
-          className="sr-only"
+          style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', width: 0, height: 0 }}
         />
         {/* Palette grid */}
-        <div className="grid grid-cols-6 gap-0.5">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 2 }}>
           {PALETTE.map(c => (
             <button
               key={c}
               disabled={disabled}
               onClick={() => setColor(c)}
               title={c}
-              className="rounded-sm transition-transform hover:scale-110"
               style={{
-                width: 14, height: 14, background: c,
-                border: color === c ? '2px solid var(--gold)' : '1px solid rgba(255,255,255,0.1)',
+                width: 14, height: 14,
+                background: c,
+                border: color === c ? '2px solid var(--color-gold)' : '1px solid rgba(0,0,0,0.1)',
+                borderRadius: 0,
                 cursor: disabled ? 'not-allowed' : 'pointer',
                 opacity: disabled ? 0.4 : 1,
+                padding: 0,
               }}
             />
           ))}
-          {/* Black and white */}
+          {/* Black and white wide swatches */}
           {['#000000', '#ffffff'].map(c => (
             <button
               key={c}
               disabled={disabled}
               onClick={() => setColor(c)}
-              className="rounded-sm col-span-3"
               style={{
-                height: 14, background: c,
-                border: color === c ? '2px solid var(--gold)' : '1px solid rgba(255,255,255,0.1)',
+                gridColumn: 'span 3',
+                height: 14,
+                background: c,
+                border: color === c ? '2px solid var(--color-gold)' : '1px solid rgba(0,0,0,0.1)',
+                borderRadius: 0,
                 cursor: disabled ? 'not-allowed' : 'pointer',
                 opacity: disabled ? 0.4 : 1,
+                padding: 0,
               }}
             />
           ))}
         </div>
       </div>
 
-      {/* Actions */}
-      <div className={`flex ${isV ? 'flex-col' : 'flex-row'} gap-2 mt-2`}>
+      {/* Actions — Undo and Clear, styled to match the design system */}
+      <div style={{ display: 'flex', flexDirection: isV ? 'column' : 'row', gap: 6 }}>
         <button
           onClick={onUndo}
           disabled={disabled}
-          className="px-3 py-1.5 rounded text-sm font-medium transition-opacity"
           style={{
-            background: '#2e2c29', color: 'var(--text)',
-            border: '1px solid var(--border)',
-            opacity: disabled ? 0.4 : 1,
+            padding: '7px 12px',
+            fontFamily: 'var(--font-ui)',
+            fontSize: 11,
+            fontWeight: 500,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            background: 'var(--color-bg)',
+            color: 'var(--color-text-secondary)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 0,
             cursor: disabled ? 'not-allowed' : 'pointer',
+            opacity: disabled ? 0.4 : 1,
+            transition: 'border-color 0.15s, color 0.15s',
+            whiteSpace: 'nowrap',
           }}
+          onMouseEnter={e => { if (!disabled) { e.currentTarget.style.borderColor = 'var(--color-gold)'; e.currentTarget.style.color = 'var(--color-text-primary)' } }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.color = 'var(--color-text-secondary)' }}
         >
           ↩ Undo
         </button>
         <button
           onClick={onClear}
           disabled={disabled}
-          className="px-3 py-1.5 rounded text-sm font-medium transition-opacity"
           style={{
-            background: '#2e2c29', color: 'var(--red)',
-            border: '1px solid var(--border)',
-            opacity: disabled ? 0.4 : 1,
+            padding: '7px 12px',
+            fontFamily: 'var(--font-ui)',
+            fontSize: 11,
+            fontWeight: 500,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            background: 'var(--color-bg)',
+            color: 'var(--color-danger)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 0,
             cursor: disabled ? 'not-allowed' : 'pointer',
+            opacity: disabled ? 0.4 : 1,
+            transition: 'border-color 0.15s',
+            whiteSpace: 'nowrap',
           }}
+          onMouseEnter={e => { if (!disabled) e.currentTarget.style.borderColor = 'var(--color-danger)' }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border)' }}
         >
           ✕ Clear
         </button>

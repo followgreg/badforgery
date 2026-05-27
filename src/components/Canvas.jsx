@@ -40,18 +40,28 @@ const Canvas = forwardRef(function Canvas({ brushType, brushSize, color, disable
     canUndo: () => undoStack.current.length > 0,
   }))
 
-  // Size canvas on mount / resize
+  // Size canvas on mount / resize — respects both width and height constraints
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     const resize = () => {
       const container = canvas.parentElement
-      const w = container.clientWidth
-      const h = Math.round(w / aspectRatio)
+      const cw = container.clientWidth
+      const ch = container.clientHeight || 0
+      let w = cw
+      let h = Math.round(w / aspectRatio)
+      // If the container has a fixed height (e.g. flex), scale down to fit
+      if (ch > 0 && h > ch) {
+        h = ch
+        w = Math.round(h * aspectRatio)
+      }
       // Save current drawing
       const dataUrl = canvas.width > 0 ? canvas.toDataURL() : null
       canvas.width = w
       canvas.height = h
+      // Set CSS size explicitly so the canvas doesn't stretch
+      canvas.style.width = w + 'px'
+      canvas.style.height = h + 'px'
       const ctx = canvas.getContext('2d')
       ctx.fillStyle = '#ffffff'
       ctx.fillRect(0, 0, w, h)
@@ -267,12 +277,11 @@ const Canvas = forwardRef(function Canvas({ brushType, brushSize, color, disable
       onTouchEnd={endDraw}
       style={{
         display: 'block',
-        width: '100%',
         touchAction: 'none',
         cursor: disabled ? 'not-allowed' : (brushType === 'eraser' ? 'cell' : 'crosshair'),
-        borderRadius: 8,
-        border: '1px solid var(--border)',
+        border: '1px solid var(--color-border)',
         background: '#fff',
+        maxWidth: '100%',
       }}
     />
   )

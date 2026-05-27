@@ -10,38 +10,9 @@ import { supabase } from '../lib/supabase'
 
 const STUDY_SECONDS = 10
 const DRAW_SECONDS = 60
+const HEADER_H = 56 // px — must match App.jsx header height
 
-// Shared button style helpers
-const btnPrimary = (disabled) => ({
-  padding: '14px 40px',
-  background: disabled ? 'var(--color-border)' : 'var(--color-text-primary)',
-  color: 'var(--color-white)',
-  fontFamily: 'var(--font-ui)',
-  fontSize: 12,
-  fontWeight: 500,
-  letterSpacing: '0.1em',
-  textTransform: 'uppercase',
-  border: 'none',
-  borderRadius: 0,
-  cursor: disabled ? 'not-allowed' : 'pointer',
-  transition: 'background 0.2s ease, color 0.2s ease',
-})
-
-const btnSecondary = {
-  padding: '12px 28px',
-  background: 'transparent',
-  color: 'var(--color-text-secondary)',
-  fontFamily: 'var(--font-ui)',
-  fontSize: 12,
-  fontWeight: 500,
-  letterSpacing: '0.1em',
-  textTransform: 'uppercase',
-  border: '1px solid var(--color-border)',
-  borderRadius: 0,
-  cursor: 'pointer',
-  transition: 'border-color 0.2s ease, color 0.2s ease',
-}
-
+// Button helpers
 function PrimaryBtn({ children, onClick, disabled, style }) {
   const [hovered, setHovered] = useState(false)
   return (
@@ -49,9 +20,18 @@ function PrimaryBtn({ children, onClick, disabled, style }) {
       onClick={onClick}
       disabled={disabled}
       style={{
-        ...btnPrimary(disabled),
-        background: hovered && !disabled ? 'var(--color-gold)' : btnPrimary(disabled).background,
+        padding: '13px 36px',
+        background: disabled ? 'var(--color-border)' : hovered ? 'var(--color-gold)' : 'var(--color-text-primary)',
         color: hovered && !disabled ? 'var(--color-text-primary)' : 'var(--color-white)',
+        fontFamily: 'var(--font-ui)',
+        fontSize: 12,
+        fontWeight: 500,
+        letterSpacing: '0.1em',
+        textTransform: 'uppercase',
+        border: 'none',
+        borderRadius: 0,
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        transition: 'background 0.15s, color 0.15s',
         ...style,
       }}
       onMouseEnter={() => setHovered(true)}
@@ -68,9 +48,18 @@ function SecondaryBtn({ children, onClick, style }) {
     <button
       onClick={onClick}
       style={{
-        ...btnSecondary,
-        borderColor: hovered ? 'var(--color-gold)' : 'var(--color-border)',
+        padding: '11px 24px',
+        background: 'transparent',
         color: hovered ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+        fontFamily: 'var(--font-ui)',
+        fontSize: 12,
+        fontWeight: 500,
+        letterSpacing: '0.1em',
+        textTransform: 'uppercase',
+        border: '1px solid ' + (hovered ? 'var(--color-gold)' : 'var(--color-border)'),
+        borderRadius: 0,
+        cursor: 'pointer',
+        transition: 'border-color 0.15s, color 0.15s',
         ...style,
       }}
       onMouseEnter={() => setHovered(true)}
@@ -124,6 +113,14 @@ export default function Play() {
   const [submittedId, setSubmittedId] = useState(existingSubId)
   const [submitError, setSubmitError] = useState('')
   const [toast, setToast] = useState('')
+
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)')
+    const handler = (e) => setIsMobile(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
 
   useEffect(() => {
     fetchArtworkForDay(todayKey).then(a => {
@@ -205,146 +202,221 @@ export default function Play() {
     }
   }
 
-  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 767px)')
-    const handler = (e) => setIsMobile(e.matches)
-    mq.addEventListener('change', handler)
-    return () => mq.removeEventListener('change', handler)
-  }, [])
+  // The viewport height available below the header
+  const gameH = `calc(100dvh - ${HEADER_H}px)`
 
   return (
-    <main style={{
-      flex: 1,
-      display: 'flex',
-      flexDirection: 'column',
-      maxWidth: 900,
-      margin: '0 auto',
-      width: '100%',
-      padding: isMobile
-        ? '16px 16px max(80px, env(safe-area-inset-bottom, 80px))'
-        : '24px 32px 48px',
-    }}>
+    <main style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%' }}>
 
       {/* Toast */}
       {toast && (
         <div style={{
           position: 'fixed',
-          top: 24,
+          top: HEADER_H + 16,
           left: '50%',
           transform: 'translateX(-50%)',
           zIndex: 50,
-          padding: '12px 28px',
+          padding: '10px 24px',
           background: 'var(--color-text-primary)',
           color: 'var(--color-white)',
           fontFamily: 'var(--font-ui)',
           fontSize: 13,
           fontWeight: 500,
           letterSpacing: '0.08em',
-          boxShadow: '0 4px 24px rgba(0,0,0,0.12)',
           whiteSpace: 'nowrap',
         }}>
           {toast}
         </div>
       )}
 
-      {/* ── STUDY PHASE ── */}
+      {/* ── STUDY PHASE ── fills viewport below header, no scroll */}
       {phase === 'study' && (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }} className="phase-fade">
+        <div
+          className="phase-fade"
+          style={{
+            height: gameH,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            padding: isMobile ? '16px 20px 12px' : '24px 48px 16px',
+            overflow: 'hidden',
+            boxSizing: 'border-box',
+          }}
+        >
           <EyebrowLabel>Study the Painting</EyebrowLabel>
           <h2 style={{
             fontFamily: 'var(--font-display)',
             fontStyle: 'italic',
             fontWeight: 400,
-            fontSize: 'clamp(26px, 4vw, 36px)',
+            fontSize: isMobile ? 22 : 30,
             color: 'var(--color-text-primary)',
             marginBottom: 4,
             textAlign: 'center',
+            lineHeight: 1.2,
+            flexShrink: 0,
           }}>
             Memorize it. You won't see it again.
           </h2>
           <p style={{
             fontFamily: 'var(--font-ui)',
-            fontSize: 13,
+            fontSize: 12,
             color: 'var(--color-text-tertiary)',
-            marginBottom: 24,
+            marginBottom: 12,
+            textAlign: 'center',
+            flexShrink: 0,
           }}>
             {artwork?.title && `${artwork.title}${artwork.artist_display ? ' · ' + artwork.artist_display.split('(')[0].trim() : ''}`}
           </p>
 
-          {artworkError ? (
-            <p style={{ color: 'var(--color-text-tertiary)' }}>Today's painting couldn't load — try refreshing.</p>
-          ) : (
-            <div style={{ position: 'relative', width: '100%', marginBottom: 24, display: 'flex', justifyContent: 'center' }}>
-              {!artworkLoaded && (
-                <div style={{ width: '100%', aspectRatio: String(artworkRatio), background: 'var(--color-surface)', borderRadius: 2 }} className="animate-pulse" />
-              )}
-              {artwork && (
-                <div style={{ position: 'relative', maxHeight: '65vh', aspectRatio: String(artworkRatio), maxWidth: '100%' }}>
-                  <img
-                    src={artwork.image_url}
-                    alt={artwork.title}
-                    style={{ width: '100%', height: '100%', objectFit: 'contain', display: artworkLoaded ? 'block' : 'none', borderRadius: 2 }}
-                    onLoad={() => setArtworkLoaded(true)}
-                  />
-                  {showBlack && (
-                    <div className="absolute inset-0 fade-black" style={{ background: 'var(--color-text-primary)', borderRadius: 2 }} />
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+          {/* Image — flex-grows to fill remaining space */}
+          <div style={{
+            flex: 1,
+            minHeight: 0,
+            width: '100%',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            position: 'relative',
+          }}>
+            {artworkError ? (
+              <p style={{ color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-ui)', fontSize: 14 }}>
+                Today's painting couldn't load — try refreshing.
+              </p>
+            ) : (
+              <>
+                {!artworkLoaded && (
+                  <div style={{
+                    width: '100%',
+                    maxWidth: '100%',
+                    aspectRatio: String(artworkRatio),
+                    background: 'var(--color-surface)',
+                    borderRadius: 2,
+                    maxHeight: '100%',
+                  }} className="animate-pulse" />
+                )}
+                {artwork && (
+                  <div style={{
+                    position: 'relative',
+                    maxWidth: '100%',
+                    maxHeight: '100%',
+                    display: artworkLoaded ? 'block' : 'none',
+                  }}>
+                    <img
+                      src={artwork.image_url}
+                      alt={artwork.title}
+                      style={{
+                        display: 'block',
+                        maxWidth: '100%',
+                        maxHeight: '100%',
+                        objectFit: 'contain',
+                      }}
+                      onLoad={() => setArtworkLoaded(true)}
+                    />
+                    {showBlack && (
+                      <div className="absolute inset-0 fade-black" style={{ background: 'var(--color-text-primary)' }} />
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
 
-          {artworkLoaded && !readyBtn && (
-            <Timer seconds={STUDY_SECONDS} onComplete={handleStudyComplete} danger={4} />
-          )}
-
-          {readyBtn && (
-            <div className="phase-fade" style={{ marginTop: 16 }}>
-              <PrimaryBtn onClick={handleStartDraw}>Ready to Draw</PrimaryBtn>
-            </div>
-          )}
+          {/* Timer / ready button — pinned at bottom */}
+          <div style={{ flexShrink: 0, padding: '12px 0 4px', textAlign: 'center' }}>
+            {artworkLoaded && !readyBtn && (
+              <Timer seconds={STUDY_SECONDS} onComplete={handleStudyComplete} danger={4} />
+            )}
+            {readyBtn && (
+              <div className="phase-fade">
+                <PrimaryBtn onClick={handleStartDraw}>Ready to Draw</PrimaryBtn>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
-      {/* ── DRAW PHASE ── */}
+      {/* ── DRAW PHASE ── fills viewport below header, no scroll */}
       {phase === 'draw' && (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }} className="phase-fade">
-
-          {/* Header row */}
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
-            <div>
+        <div
+          className="phase-fade"
+          style={{
+            height: gameH,
+            display: 'flex',
+            flexDirection: 'column',
+            padding: isMobile ? '10px 12px 6px' : '12px 20px 8px',
+            overflow: 'hidden',
+            boxSizing: 'border-box',
+          }}
+        >
+          {/* Compact header row */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: 8,
+            flexShrink: 0,
+            gap: 12,
+          }}>
+            <div style={{ minWidth: 0 }}>
               <EyebrowLabel>Drawing from memory</EyebrowLabel>
-              <p style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 18, color: 'var(--color-text-primary)' }}>
+              <p style={{
+                fontFamily: 'var(--font-display)',
+                fontStyle: 'italic',
+                fontSize: isMobile ? 14 : 17,
+                color: 'var(--color-text-primary)',
+                lineHeight: 1.2,
+                overflow: 'hidden',
+                whiteSpace: 'nowrap',
+                textOverflow: 'ellipsis',
+              }}>
                 {artwork?.title}
               </p>
             </div>
             {!timeUp
               ? <Timer seconds={DRAW_SECONDS} onComplete={handleDrawComplete} size="sm" />
-              : <span style={{ fontFamily: 'var(--font-ui)', fontSize: 11, fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-danger)' }}>Time's Up</span>
+              : <span style={{
+                  fontFamily: 'var(--font-ui)',
+                  fontSize: 11,
+                  fontWeight: 500,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  color: 'var(--color-danger)',
+                  flexShrink: 0,
+                }}>Time's Up</span>
             }
           </div>
 
-          {/* Canvas + Toolbar */}
+          {/* Canvas + Toolbar — fills remaining height */}
           <div style={{
+            flex: 1,
+            minHeight: 0,
             display: 'flex',
             flexDirection: isMobile ? 'column' : 'row',
-            gap: 12,
-            flex: 1,
+            gap: 10,
           }}>
-            {/* On mobile: canvas first, toolbar below */}
+            {/* Desktop: toolbar on left */}
             {!isMobile && (
-              <Toolbar
-                brushType={brushType} setBrushType={setBrushType}
-                brushSize={brushSize} setBrushSize={setBrushSize}
-                color={color} setColor={setColor}
-                onUndo={handleUndo} onClear={handleClear}
-                disabled={drawDisabled}
-                orientation="vertical"
-              />
+              <div style={{ flexShrink: 0, overflowY: 'auto' }}>
+                <Toolbar
+                  brushType={brushType} setBrushType={setBrushType}
+                  brushSize={brushSize} setBrushSize={setBrushSize}
+                  color={color} setColor={setColor}
+                  onUndo={handleUndo} onClear={handleClear}
+                  disabled={drawDisabled}
+                  orientation="vertical"
+                />
+              </div>
             )}
 
-            <div style={{ flex: 1, minWidth: 0 }}>
+            {/* Canvas — centered, scales to fit */}
+            <div style={{
+              flex: 1,
+              minWidth: 0,
+              minHeight: 0,
+              display: 'flex',
+              alignItems: isMobile ? 'flex-start' : 'center',
+              justifyContent: 'center',
+            }}>
               <Canvas
                 ref={canvasRef}
                 brushType={brushType} brushSize={brushSize} color={color}
@@ -352,8 +424,9 @@ export default function Play() {
               />
             </div>
 
+            {/* Mobile: toolbar below canvas, horizontally scrollable */}
             {isMobile && (
-              <div style={{ overflowX: 'auto', paddingBottom: 4 }}>
+              <div style={{ flexShrink: 0, overflowX: 'auto' }}>
                 <Toolbar
                   brushType={brushType} setBrushType={setBrushType}
                   brushSize={brushSize} setBrushSize={setBrushSize}
@@ -366,9 +439,13 @@ export default function Play() {
             )}
           </div>
 
+          {/* Time's up — submit button */}
           {timeUp && (
-            <div style={{ marginTop: 20, textAlign: 'center' }} className="phase-fade">
-              <PrimaryBtn onClick={() => { setCapturedDataUrl(canvasRef.current?.getDataURL()); setPhase('submit') }}>
+            <div style={{ flexShrink: 0, textAlign: 'center', padding: '10px 0 0' }} className="phase-fade">
+              <PrimaryBtn onClick={() => {
+                setCapturedDataUrl(canvasRef.current?.getDataURL())
+                setPhase('submit')
+              }}>
                 Submit Your Forgery
               </PrimaryBtn>
             </div>
@@ -376,15 +453,28 @@ export default function Play() {
         </div>
       )}
 
-      {/* ── SUBMIT PHASE ── */}
+      {/* ── SUBMIT PHASE ── scrollable, centered */}
       {phase === 'submit' && (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }} className="phase-fade">
+        <div
+          className="phase-fade"
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            maxWidth: 860,
+            margin: '0 auto',
+            width: '100%',
+            padding: isMobile ? '24px 20px 48px' : '32px 40px 64px',
+            boxSizing: 'border-box',
+          }}
+        >
           <EyebrowLabel>Your Forgery</EyebrowLabel>
           <h2 style={{
             fontFamily: 'var(--font-display)',
             fontStyle: 'italic',
             fontWeight: 400,
-            fontSize: 'clamp(28px, 4vw, 40px)',
+            fontSize: 'clamp(26px, 4vw, 38px)',
             color: 'var(--color-text-primary)',
             marginBottom: 6,
             textAlign: 'center',
@@ -396,13 +486,27 @@ export default function Play() {
           </p>
 
           {/* Side by side */}
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 24, width: '100%', marginBottom: 32 }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+            gap: 24,
+            width: '100%',
+            marginBottom: 32,
+          }}>
             <div>
               <EyebrowLabel>The Original</EyebrowLabel>
               {artwork?.image_url && (
-                <img src={artwork.image_url} alt={artwork.title} style={{ width: '100%', objectFit: 'contain', maxHeight: 280, borderRadius: 2 }} />
+                <img src={artwork.image_url} alt={artwork.title}
+                  style={{ width: '100%', objectFit: 'contain', maxHeight: 280 }} />
               )}
-              <p style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 14, color: 'var(--color-text-secondary)', marginTop: 8, textAlign: 'center' }}>
+              <p style={{
+                fontFamily: 'var(--font-display)',
+                fontStyle: 'italic',
+                fontSize: 13,
+                color: 'var(--color-text-secondary)',
+                marginTop: 8,
+                textAlign: 'center',
+              }}>
                 {artwork?.title}
               </p>
             </div>
@@ -411,7 +515,7 @@ export default function Play() {
               <img
                 src={capturedDataUrl}
                 alt="Your drawing"
-                style={{ width: '100%', objectFit: 'contain', maxHeight: 280, borderRadius: 2, background: '#fff' }}
+                style={{ width: '100%', objectFit: 'contain', maxHeight: 280, background: '#fff' }}
               />
             </div>
           </div>
@@ -434,15 +538,24 @@ export default function Play() {
                 fontSize: 15,
                 color: 'var(--color-text-primary)',
                 outline: 'none',
+                boxSizing: 'border-box',
               }}
             />
-            <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: 'var(--color-text-tertiary)', textAlign: 'right', marginTop: 4 }}>
+            <p style={{
+              fontFamily: 'var(--font-ui)',
+              fontSize: 11,
+              color: 'var(--color-text-tertiary)',
+              textAlign: 'right',
+              marginTop: 4,
+            }}>
               {nickname.length}/20
             </p>
           </div>
 
           {submitError && (
-            <p style={{ fontFamily: 'var(--font-ui)', fontSize: 13, color: 'var(--color-danger)', marginBottom: 12 }}>{submitError}</p>
+            <p style={{ fontFamily: 'var(--font-ui)', fontSize: 13, color: 'var(--color-danger)', marginBottom: 12 }}>
+              {submitError}
+            </p>
           )}
 
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -456,9 +569,19 @@ export default function Play() {
         </div>
       )}
 
-      {/* ── GALLERY PHASE ── */}
+      {/* ── GALLERY PHASE ── scrollable */}
       {phase === 'gallery' && (
-        <div className="phase-fade">
+        <div
+          className="phase-fade"
+          style={{
+            flex: 1,
+            maxWidth: 860,
+            margin: '0 auto',
+            width: '100%',
+            padding: isMobile ? '20px 20px 48px' : '28px 40px 64px',
+            boxSizing: 'border-box',
+          }}
+        >
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 24 }}>
             <SecondaryBtn onClick={() => setPhase('submit')}>← Edit My Forgery</SecondaryBtn>
           </div>
