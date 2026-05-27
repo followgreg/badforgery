@@ -17,7 +17,6 @@ function GalleryCard({ sub, highlighted }) {
   const [avgRating, setAvgRating] = useState(sub.avg_rating || 0)
   const [ratingCount, setRatingCount] = useState(sub.rating_count || 0)
   const [locked, setLocked] = useState(() => hasRated(sub.id))
-  const [hovered, setHovered] = useState(false)
 
   async function handleRate(stars) {
     if (!supabase || locked) return
@@ -30,31 +29,20 @@ function GalleryCard({ sub, highlighted }) {
     await supabase.from('ratings').insert({ submission_id: sub.id, stars })
   }
 
-  const borderColor = highlighted
-    ? 'var(--color-gold)'
-    : hovered
-    ? 'var(--color-gold)'
-    : 'var(--color-border)'
-
-  const borderWidth = highlighted ? 2 : 1
-
   return (
     <div
       style={{
         textAlign: 'left',
         background: 'var(--color-surface)',
-        border: `${borderWidth}px solid ${borderColor}`,
+        border: highlighted ? '2px solid var(--color-gold)' : '1px solid var(--color-border)',
         overflow: 'hidden',
-        transition: 'border-color 0.15s ease',
       }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
     >
-      <div style={{ aspectRatio: '4/3', overflow: 'hidden', background: '#fff' }}>
+      <div style={{ background: '#fff' }}>
         <img
           src={sub.drawing_data}
           alt={`Forgery by ${sub.nickname || 'Anonymous'}`}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          style={{ width: '100%', display: 'block' }}
         />
       </div>
       <div style={{ padding: '10px 12px' }}>
