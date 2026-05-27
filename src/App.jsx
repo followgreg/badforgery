@@ -60,14 +60,21 @@ function Footer() {
   return (
     <footer style={{
       textAlign: 'center',
-      padding: '24px 0',
-      fontSize: 12,
-      color: 'var(--color-text-tertiary)',
+      padding: '20px 24px',
       borderTop: '1px solid var(--color-border)',
       fontFamily: 'var(--font-ui)',
-      letterSpacing: '0.05em',
     }}>
-      BadForgery — attempt greatness badly.
+      <p style={{ fontSize: 12, color: 'var(--color-text-tertiary)', marginBottom: 4 }}>
+        ©2026 Never Stop Creating, LLC
+      </p>
+      <a
+        href="mailto:info@neverstopcreatingllc.com"
+        style={{ fontSize: 12, color: 'var(--color-text-tertiary)', textDecoration: 'none' }}
+        onMouseEnter={e => e.currentTarget.style.color = 'var(--color-text-primary)'}
+        onMouseLeave={e => e.currentTarget.style.color = 'var(--color-text-tertiary)'}
+      >
+        info@neverstopcreatingllc.com
+      </a>
     </footer>
   )
 }

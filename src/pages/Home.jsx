@@ -90,7 +90,7 @@ function PinkBrushstroke() {
 // ── SVG Icons: gestural brush-stroke style ──
 function EyeIcon() {
   return (
-    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+    <svg width="32" height="32" viewBox="0 0 40 40" fill="none" aria-hidden="true">
       <path
         d="M 4,20 C 9,11 31,11 36,20"
         stroke="var(--color-gold)" strokeWidth="2.5" strokeLinecap="round" fill="none"
@@ -107,7 +107,7 @@ function EyeIcon() {
 
 function BrushIcon() {
   return (
-    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+    <svg width="32" height="32" viewBox="0 0 40 40" fill="none" aria-hidden="true">
       {/* Handle */}
       <line x1="31" y1="5" x2="19" y2="19" stroke="var(--color-gold)" strokeWidth="3" strokeLinecap="round" />
       {/* Ferrule */}
@@ -126,7 +126,7 @@ function BrushIcon() {
 
 function ShareIcon() {
   return (
-    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+    <svg width="32" height="32" viewBox="0 0 40 40" fill="none" aria-hidden="true">
       {/* Three nodes */}
       <circle cx="20" cy="7"  r="4" fill="var(--color-gold)" />
       <circle cx="7"  cy="32" r="4" fill="var(--color-gold)" />
@@ -161,11 +161,11 @@ export default function Home() {
         style={{
           position: 'relative',
           width: '100%',
-          padding: '64px 24px 80px',
+          padding: '32px 24px 36px',
           textAlign: 'center',
           background: 'var(--color-bg)',
           marginTop: -56, // pull hero up behind transparent nav
-          paddingTop: 'calc(56px + 64px)', // compensate: nav height + visual breathing room
+          paddingTop: 'calc(56px + 32px)', // compensate: nav height + visual breathing room
         }}
       >
         {/* Frame corner brackets */}
@@ -180,7 +180,7 @@ export default function Home() {
             fontFamily: 'var(--font-display)',
             fontStyle: 'italic',
             fontWeight: 400,
-            fontSize: 'clamp(72px, 10vw, 144px)',
+            fontSize: 'clamp(48px, 8vw, 96px)',
             lineHeight: 1.05,
             color: 'var(--color-text-primary)',
             letterSpacing: '-0.02em',
@@ -198,22 +198,15 @@ export default function Home() {
           lineHeight: 1.55,
           color: 'var(--color-text-secondary)',
           maxWidth: 520,
-          margin: '28px auto 0',
+          margin: '14px auto 0',
         }}>
           You have 10 seconds to look and 60 seconds to recreate. Don't think, just create. Then share your masterpiece.
         </p>
 
-        {/* Gold divider */}
-        <div style={{
-          width: 64,
-          height: 1,
-          background: 'var(--color-gold)',
-          margin: '40px auto 0',
-        }} />
       </section>
 
       {/* ── Content column ── */}
-      <div style={{ width: '100%', maxWidth: 600, padding: '0 24px 80px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div style={{ width: '100%', maxWidth: 600, padding: '0 24px 48px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
 
         {/* ── MUSEUM PLACARD ── */}
         <div
@@ -224,8 +217,8 @@ export default function Home() {
             borderLeft: '3px solid var(--color-gold)',
             padding: '28px 36px',
             borderRadius: 2,
-            marginBottom: 48,
-            marginTop: 40,
+            marginBottom: 28,
+            marginTop: 20,
           }}
         >
           {loading ? (
@@ -285,7 +278,7 @@ export default function Home() {
           gap: 0,
           width: '100%',
           maxWidth: 480,
-          marginBottom: 40,
+          marginBottom: 24,
         }}>
           {[
             { icon: <EyeIcon />, label: 'Look', sub: '10 seconds' },
@@ -338,7 +331,7 @@ export default function Home() {
             borderRadius: 0,
             cursor: loading || error ? 'not-allowed' : 'pointer',
             transition: 'background 0.2s ease, color 0.2s ease',
-            marginBottom: 16,
+            marginBottom: 12,
           }}
           onMouseEnter={e => {
             if (!loading && !error) {
@@ -370,7 +363,7 @@ export default function Home() {
             color: 'var(--color-text-tertiary)',
             cursor: 'pointer',
             padding: 0,
-            marginBottom: 64,
+            marginBottom: 40,
             transition: 'color 0.15s',
           }}
           onMouseEnter={e => e.currentTarget.style.color = 'var(--color-text-primary)'}

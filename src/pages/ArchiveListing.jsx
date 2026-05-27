@@ -61,7 +61,7 @@ export default function ArchiveListing() {
       {/* Grid — auto-fill so it collapses to 2 cols on mobile, 4-5 on desktop */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
         gap: 10,
       }}>
         {allKeys.map(key => {

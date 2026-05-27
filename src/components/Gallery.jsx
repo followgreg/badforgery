@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import GalleryModal from './GalleryModal'
 import StarRating from './StarRating'
+import { hasRated, setRated } from '../lib/storage'
 
 function timeAgo(ts) {
   const diff = Date.now() - new Date(ts).getTime()
@@ -13,10 +13,80 @@ function timeAgo(ts) {
   return `${Math.floor(hrs / 24)}d ago`
 }
 
+function GalleryCard({ sub, highlighted }) {
+  const [avgRating, setAvgRating] = useState(sub.avg_rating || 0)
+  const [ratingCount, setRatingCount] = useState(sub.rating_count || 0)
+  const [locked, setLocked] = useState(() => hasRated(sub.id))
+  const [hovered, setHovered] = useState(false)
+
+  async function handleRate(stars) {
+    if (!supabase || locked) return
+    setLocked(true)
+    setRated(sub.id)
+    const newCount = ratingCount + 1
+    const newAvg = (avgRating * ratingCount + stars) / newCount
+    setAvgRating(newAvg)
+    setRatingCount(newCount)
+    await supabase.from('ratings').insert({ submission_id: sub.id, stars })
+  }
+
+  const borderColor = highlighted
+    ? 'var(--color-gold)'
+    : hovered
+    ? 'var(--color-gold)'
+    : 'var(--color-border)'
+
+  const borderWidth = highlighted ? 2 : 1
+
+  return (
+    <div
+      style={{
+        textAlign: 'left',
+        background: 'var(--color-surface)',
+        border: `${borderWidth}px solid ${borderColor}`,
+        overflow: 'hidden',
+        transition: 'border-color 0.15s ease',
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <div style={{ aspectRatio: '4/3', overflow: 'hidden', background: '#fff' }}>
+        <img
+          src={sub.drawing_data}
+          alt={`Forgery by ${sub.nickname || 'Anonymous'}`}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+        />
+      </div>
+      <div style={{ padding: '10px 12px' }}>
+        <p style={{
+          fontFamily: 'var(--font-ui)',
+          fontWeight: 500,
+          fontSize: 13,
+          color: 'var(--color-text-primary)',
+          overflow: 'hidden',
+          whiteSpace: 'nowrap',
+          textOverflow: 'ellipsis',
+          marginBottom: 2,
+        }}>
+          {sub.nickname || 'Anonymous Forger'}
+        </p>
+        <p style={{
+          fontFamily: 'var(--font-ui)',
+          fontSize: 11,
+          color: 'var(--color-text-tertiary)',
+          marginBottom: 6,
+        }}>
+          {timeAgo(sub.created_at)}
+        </p>
+        <StarRating avg={avgRating} count={ratingCount} onRate={handleRate} locked={locked} size={14} />
+      </div>
+    </div>
+  )
+}
+
 export default function Gallery({ dayKey, artwork, highlightId }) {
   const [submissions, setSubmissions] = useState([])
   const [sort, setSort] = useState('newest')
-  const [selected, setSelected] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
 
@@ -24,7 +94,6 @@ export default function Gallery({ dayKey, artwork, highlightId }) {
     if (!supabase) { setError(true); setLoading(false); return }
     async function load() {
       setLoading(true)
-      // Fetch submissions
       const { data: subs, error: subErr } = await supabase
         .from('submissions')
         .select('*')
@@ -32,7 +101,6 @@ export default function Gallery({ dayKey, artwork, highlightId }) {
 
       if (subErr) { setError(true); setLoading(false); return }
 
-      // Fetch ratings aggregate
       const ids = (subs || []).map(s => s.id)
       let ratingMap = {}
       if (ids.length > 0) {
@@ -56,15 +124,9 @@ export default function Gallery({ dayKey, artwork, highlightId }) {
 
       setSubmissions(enriched)
       setLoading(false)
-
-      // Auto-open highlighted submission
-      if (highlightId) {
-        const found = enriched.find(s => s.id === highlightId)
-        if (found) setSelected(found)
-      }
     }
     load()
-  }, [dayKey, highlightId])
+  }, [dayKey])
 
   const sorted = [...submissions].sort((a, b) => {
     if (sort === 'top') return b.avg_rating - a.avg_rating
@@ -73,7 +135,7 @@ export default function Gallery({ dayKey, artwork, highlightId }) {
 
   if (error) {
     return (
-      <div className="text-center py-12" style={{ color: 'var(--text-muted)' }}>
+      <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-ui)', fontSize: 14 }}>
         Gallery unavailable — couldn't reach the server.
       </div>
     )
@@ -82,9 +144,23 @@ export default function Gallery({ dayKey, artwork, highlightId }) {
   return (
     <div>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 24, gap: 12, flexWrap: 'wrap' }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'flex-end',
+        justifyContent: 'space-between',
+        marginBottom: 24,
+        gap: 12,
+        flexWrap: 'wrap',
+      }}>
         <div>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 400, fontSize: 28, color: 'var(--color-text-primary)', lineHeight: 1.2 }}>
+          <h2 style={{
+            fontFamily: 'var(--font-display)',
+            fontStyle: 'italic',
+            fontWeight: 400,
+            fontSize: 28,
+            color: 'var(--color-text-primary)',
+            lineHeight: 1.2,
+          }}>
             The Forgeries
           </h2>
           <p style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: 'var(--color-text-tertiary)', marginTop: 4 }}>
@@ -132,45 +208,9 @@ export default function Gallery({ dayKey, artwork, highlightId }) {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {sorted.map(sub => (
-            <button
-              key={sub.id}
-              onClick={() => setSelected(sub)}
-              style={{
-                textAlign: 'left',
-                background: 'var(--color-surface)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 0,
-                overflow: 'hidden',
-                cursor: 'pointer',
-                transition: 'border-color 0.15s ease',
-                padding: 0,
-              }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-gold)'}
-              onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-border)'}
-            >
-              <div style={{ aspectRatio: '4/3', overflow: 'hidden', background: '#fff' }}>
-                <img
-                  src={sub.drawing_data}
-                  alt={`Forgery by ${sub.nickname || 'Anonymous'}`}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                />
-              </div>
-              <div style={{ padding: '10px 12px' }}>
-                <p style={{ fontFamily: 'var(--font-ui)', fontWeight: 500, fontSize: 13, color: 'var(--color-text-primary)', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', marginBottom: 2 }}>{sub.nickname || 'Anonymous Forger'}</p>
-                <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: 'var(--color-text-tertiary)', marginBottom: 6 }}>{timeAgo(sub.created_at)}</p>
-                <StarRating avg={sub.avg_rating} count={sub.rating_count} locked size={14} />
-              </div>
-            </button>
+            <GalleryCard key={sub.id} sub={sub} highlighted={sub.id === highlightId} />
           ))}
         </div>
-      )}
-
-      {selected && (
-        <GalleryModal
-          submission={selected}
-          artwork={artwork}
-          onClose={() => setSelected(null)}
-        />
       )}
     </div>
   )

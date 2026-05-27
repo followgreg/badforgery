@@ -146,7 +146,6 @@ export default function Play() {
   const handleDrawComplete = useCallback(() => {
     setDrawDisabled(true)
     setTimeUp(true)
-    showToast("Time's up!")
   }, [])
 
   function showToast(msg) {
@@ -256,7 +255,7 @@ export default function Play() {
             {artwork?.title && `${artwork.title}${artwork.artist_display ? ' · ' + artwork.artist_display.split('(')[0].trim() : ''}`}
           </p>
 
-          {/* Image — flex-grows to fill remaining space */}
+          {/* Image — flex-grows to fill remaining space; overlays inside */}
           <div style={{
             flex: 1,
             minHeight: 0,
@@ -307,15 +306,32 @@ export default function Play() {
                 )}
               </>
             )}
-          </div>
 
-          {/* Timer / ready button — pinned at bottom */}
-          <div style={{ flexShrink: 0, padding: '12px 0 4px', textAlign: 'center' }}>
+            {/* Timer — overlaid at bottom of image area */}
             {artworkLoaded && !readyBtn && (
-              <Timer seconds={STUDY_SECONDS} onComplete={handleStudyComplete} danger={4} />
+              <div style={{
+                position: 'absolute',
+                bottom: 16,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                pointerEvents: 'none',
+              }}>
+                <Timer seconds={STUDY_SECONDS} onComplete={handleStudyComplete} danger={4} />
+              </div>
             )}
+
+            {/* Ready to Draw — centered overlay on blacked-out image */}
             {readyBtn && (
-              <div className="phase-fade">
+              <div
+                className="phase-fade"
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
                 <PrimaryBtn onClick={handleStartDraw}>Ready to Draw</PrimaryBtn>
               </div>
             )}
@@ -396,7 +412,7 @@ export default function Play() {
               </div>
             )}
 
-            {/* Canvas — centered, scales to fit */}
+            {/* Canvas — centered, scales to fit; submit overlay when time's up */}
             <div style={{
               flex: 1,
               minWidth: 0,
@@ -404,12 +420,33 @@ export default function Play() {
               display: 'flex',
               alignItems: isMobile ? 'flex-start' : 'center',
               justifyContent: 'center',
+              position: 'relative',
             }}>
               <Canvas
                 ref={canvasRef}
                 brushType={brushType} brushSize={brushSize} color={color}
                 disabled={drawDisabled} aspectRatio={artworkRatio}
               />
+              {timeUp && (
+                <div
+                  className="phase-fade"
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'rgba(26,23,20,0.6)',
+                  }}
+                >
+                  <PrimaryBtn onClick={() => {
+                    setCapturedDataUrl(canvasRef.current?.getDataURL())
+                    setPhase('submit')
+                  }}>
+                    Submit Your Forgery
+                  </PrimaryBtn>
+                </div>
+              )}
             </div>
 
             {/* Mobile: toolbar below canvas, horizontally scrollable */}
@@ -427,17 +464,6 @@ export default function Play() {
             )}
           </div>
 
-          {/* Time's up — submit button */}
-          {timeUp && (
-            <div style={{ flexShrink: 0, textAlign: 'center', padding: '10px 0 0' }} className="phase-fade">
-              <PrimaryBtn onClick={() => {
-                setCapturedDataUrl(canvasRef.current?.getDataURL())
-                setPhase('submit')
-              }}>
-                Submit Your Forgery
-              </PrimaryBtn>
-            </div>
-          )}
         </div>
       )}
 
