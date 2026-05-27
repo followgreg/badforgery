@@ -136,20 +136,6 @@ export default function Archive() {
         )}
       </div>
 
-      {/* Locked notice */}
-      <div style={{
-        marginBottom: 32,
-        padding: '11px 18px',
-        background: 'var(--color-surface)',
-        borderLeft: '3px solid var(--color-border-strong)',
-        fontFamily: 'var(--font-ui)',
-        fontSize: 12,
-        color: 'var(--color-text-tertiary)',
-        letterSpacing: '0.02em',
-      }}>
-        Drawing is closed for this day — ratings are still open.
-      </div>
-
       {/* Gallery of forgeries */}
       <Gallery dayKey={day_key} artwork={artwork} />
 

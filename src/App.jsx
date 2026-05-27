@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Link, NavLink, useLocation } from 'react-
 import Home from './pages/Home'
 import Play from './pages/Play'
 import Archive from './pages/Archive'
+import ArchiveListing from './pages/ArchiveListing'
 
 function navClass({ isActive }) {
   return isActive ? 'nav-link nav-link-active' : 'nav-link'
@@ -46,8 +47,8 @@ function Header() {
 
       <nav style={{ display: 'flex', gap: 28 }}>
         <NavLink to="/play" className={navClass}>Play</NavLink>
-        {/* "end" ensures the Archive link is only active on exactly "/" not on /archive/... too */}
-        <NavLink to="/" end className={navClass}>Archive</NavLink>
+        {/* Archive goes to the full listing page */}
+        <NavLink to="/archive" className={navClass}>Archive</NavLink>
       </nav>
     </header>
   )
@@ -79,6 +80,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/play" element={<Play />} />
+          <Route path="/archive" element={<ArchiveListing />} />
           <Route path="/archive/:day_key" element={<Archive />} />
         </Routes>
         <Footer />

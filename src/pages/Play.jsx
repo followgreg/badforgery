@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
-import { useSearchParams } from 'react-router-dom'
 import Canvas from '../components/Canvas'
 import Toolbar from '../components/Toolbar'
 import Timer from '../components/Timer'
 import Gallery from '../components/Gallery'
 import { fetchArtworkForDay } from '../lib/artwork'
-import { getTodayKey, getSubmissionId, setSubmissionId, setPlayed } from '../lib/storage'
+import { getTodayKey } from '../lib/storage'
 import { supabase } from '../lib/supabase'
 
 const STUDY_SECONDS = 10
@@ -87,11 +86,10 @@ function EyebrowLabel({ children }) {
 }
 
 export default function Play() {
-  const [searchParams] = useSearchParams()
   const todayKey = getTodayKey()
-  const existingSubId = getSubmissionId(todayKey)
 
-  const [phase, setPhase] = useState(existingSubId || searchParams.get('gallery') ? 'gallery' : 'study')
+  // Always start fresh — unlimited plays per day
+  const [phase, setPhase] = useState('study')
   const [artwork, setArtwork] = useState(null)
   const [artworkError, setArtworkError] = useState(false)
   const [artworkLoaded, setArtworkLoaded] = useState(false)
@@ -110,7 +108,7 @@ export default function Play() {
   const [capturedDataUrl, setCapturedDataUrl] = useState(null)
   const [nickname, setNickname] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const [submittedId, setSubmittedId] = useState(existingSubId)
+  const [submittedId, setSubmittedId] = useState(null)   // current session's submission ID (for gallery highlight)
   const [submitError, setSubmitError] = useState('')
   const [toast, setToast] = useState('')
 
@@ -143,8 +141,7 @@ export default function Play() {
 
   const handleStartDraw = useCallback(() => {
     setPhase('draw')
-    setPlayed(todayKey)
-  }, [todayKey])
+  }, [])
 
   const handleDrawComplete = useCallback(() => {
     setDrawDisabled(true)
@@ -171,29 +168,20 @@ export default function Play() {
     setSubmitting(true)
     setSubmitError('')
     try {
-      if (submittedId) {
-        const { error } = await supabase
-          .from('submissions')
-          .update({ drawing_data: drawingData, nickname: nickname.trim() || null })
-          .eq('id', submittedId)
-        if (error) throw error
-        setPhase('gallery')
-      } else {
-        const { data, error } = await supabase
-          .from('submissions')
-          .insert({
-            day_key: todayKey,
-            nickname: nickname.trim() || null,
-            drawing_data: drawingData,
-            artwork_id: artwork?.artwork_id || '',
-          })
-          .select('id')
-          .single()
-        if (error) throw error
-        setSubmissionId(todayKey, data.id)
-        setSubmittedId(data.id)
-        setPhase('gallery')
-      }
+      // Always insert a new submission — unlimited plays allowed
+      const { data, error } = await supabase
+        .from('submissions')
+        .insert({
+          day_key: todayKey,
+          nickname: nickname.trim() || null,
+          drawing_data: drawingData,
+          artwork_id: artwork?.artwork_id || '',
+        })
+        .select('id')
+        .single()
+      if (error) throw error
+      setSubmittedId(data.id)   // track for gallery highlight this session
+      setPhase('gallery')
     } catch (e) {
       setSubmitError('Something went wrong. Try again.')
       console.error(e)
@@ -479,10 +467,10 @@ export default function Play() {
             marginBottom: 6,
             textAlign: 'center',
           }}>
-            {submittedId ? 'Update your masterpiece' : 'Ready to confess?'}
+            Ready to confess?
           </h2>
           <p style={{ fontFamily: 'var(--font-ui)', fontSize: 14, color: 'var(--color-text-tertiary)', marginBottom: 32 }}>
-            {submittedId ? 'Replace your forgery or leave it as is.' : 'Post it to the global gallery.'}
+            Post it to the global gallery.
           </p>
 
           {/* Side by side */}
@@ -559,11 +547,8 @@ export default function Play() {
           )}
 
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
-            {submittedId && (
-              <SecondaryBtn onClick={() => setPhase('gallery')}>See Gallery</SecondaryBtn>
-            )}
             <PrimaryBtn onClick={handleSubmit} disabled={submitting}>
-              {submitting ? 'Posting…' : submittedId ? 'Update My Forgery' : 'Post to Gallery'}
+              {submitting ? 'Posting…' : 'Post to Gallery'}
             </PrimaryBtn>
           </div>
         </div>
@@ -582,9 +567,18 @@ export default function Play() {
             boxSizing: 'border-box',
           }}
         >
-          {/* Edit link — mirrors Archive's "← Back" */}
+          {/* Play Again — resets everything for a fresh session */}
           <button
-            onClick={() => setPhase('submit')}
+            onClick={() => {
+              setCapturedDataUrl(null)
+              setSubmittedId(null)
+              setTimeUp(false)
+              setDrawDisabled(false)
+              setShowBlack(false)
+              setReadyBtn(false)
+              setArtworkLoaded(false)
+              setPhase('study')
+            }}
             style={{
               fontFamily: 'var(--font-ui)',
               fontSize: 11,
@@ -603,7 +597,7 @@ export default function Play() {
             onMouseEnter={e => e.currentTarget.style.color = 'var(--color-text-primary)'}
             onMouseLeave={e => e.currentTarget.style.color = 'var(--color-text-tertiary)'}
           >
-            ← Edit My Forgery
+            ← Play Again
           </button>
 
           {/* Placard — mirrors Archive */}
@@ -664,20 +658,6 @@ export default function Play() {
             ) : (
               <div style={{ aspectRatio: '4/3', background: 'var(--color-surface)', maxHeight: '52vh' }} className="animate-pulse" />
             )}
-          </div>
-
-          {/* Round complete notice — mirrors Archive's locked notice */}
-          <div style={{
-            marginBottom: 32,
-            padding: '11px 18px',
-            background: 'var(--color-surface)',
-            borderLeft: '3px solid var(--color-border-strong)',
-            fontFamily: 'var(--font-ui)',
-            fontSize: 12,
-            color: 'var(--color-text-tertiary)',
-            letterSpacing: '0.02em',
-          }}>
-            Today's round is complete — come back tomorrow for a new painting.
           </div>
 
           {/* Gallery of today's forgeries */}

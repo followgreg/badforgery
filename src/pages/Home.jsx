@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchArtworkForDay } from '../lib/artwork'
-import { getTodayKey, getSubmissionId } from '../lib/storage'
+import { getTodayKey } from '../lib/storage'
 import ArchivePicker from '../components/ArchivePicker'
 
 // Strips nationality/dates from AIC artist_display e.g. "Pablo Picasso (Spanish, 1881–1973)" → "Pablo Picasso"
@@ -144,7 +144,6 @@ export default function Home() {
   const [error, setError] = useState(false)
   const navigate = useNavigate()
   const todayKey = getTodayKey()
-  const alreadySubmitted = !!getSubmissionId(todayKey)
 
   useEffect(() => {
     fetchArtworkForDay(todayKey).then(a => {
@@ -325,7 +324,7 @@ export default function Home() {
         {/* ── PLAY TODAY BUTTON ── */}
         <button
           disabled={loading || error}
-          onClick={() => navigate(alreadySubmitted ? '/play?gallery=1' : '/play')}
+          onClick={() => navigate('/play')}
           style={{
             padding: '16px 48px',
             background: loading || error ? 'var(--color-border)' : 'var(--color-text-primary)',
@@ -339,7 +338,7 @@ export default function Home() {
             borderRadius: 0,
             cursor: loading || error ? 'not-allowed' : 'pointer',
             transition: 'background 0.2s ease, color 0.2s ease',
-            marginBottom: 64,
+            marginBottom: 16,
           }}
           onMouseEnter={e => {
             if (!loading && !error) {
@@ -354,7 +353,30 @@ export default function Home() {
             }
           }}
         >
-          {alreadySubmitted ? "See Today's Gallery" : 'Play Today'}
+          Play Today
+        </button>
+
+        {/* See today's gallery — goes to /archive/today, not a modal */}
+        <button
+          onClick={() => navigate(`/archive/${todayKey}`)}
+          style={{
+            background: 'none',
+            border: 'none',
+            fontFamily: 'var(--font-ui)',
+            fontSize: 12,
+            fontWeight: 500,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            color: 'var(--color-text-tertiary)',
+            cursor: 'pointer',
+            padding: 0,
+            marginBottom: 64,
+            transition: 'color 0.15s',
+          }}
+          onMouseEnter={e => e.currentTarget.style.color = 'var(--color-text-primary)'}
+          onMouseLeave={e => e.currentTarget.style.color = 'var(--color-text-tertiary)'}
+        >
+          See Today's Gallery →
         </button>
 
         {/* ── PAST DAYS (conditional — only renders when data loads) ── */}
