@@ -569,7 +569,7 @@ export default function Play() {
         </div>
       )}
 
-      {/* ── GALLERY PHASE ── scrollable */}
+      {/* ── GALLERY PHASE ── matches Archive page layout */}
       {phase === 'gallery' && (
         <div
           className="phase-fade"
@@ -578,13 +578,109 @@ export default function Play() {
             maxWidth: 860,
             margin: '0 auto',
             width: '100%',
-            padding: isMobile ? '20px 20px 48px' : '28px 40px 64px',
+            padding: isMobile ? '24px 20px 64px' : '28px 40px 64px',
             boxSizing: 'border-box',
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 24 }}>
-            <SecondaryBtn onClick={() => setPhase('submit')}>← Edit My Forgery</SecondaryBtn>
+          {/* Edit link — mirrors Archive's "← Back" */}
+          <button
+            onClick={() => setPhase('submit')}
+            style={{
+              fontFamily: 'var(--font-ui)',
+              fontSize: 11,
+              fontWeight: 500,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              color: 'var(--color-text-tertiary)',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 0,
+              display: 'inline-block',
+              marginBottom: 28,
+              transition: 'color 0.15s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.color = 'var(--color-text-primary)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'var(--color-text-tertiary)'}
+          >
+            ← Edit My Forgery
+          </button>
+
+          {/* Placard — mirrors Archive */}
+          <div style={{ marginBottom: 24 }}>
+            <p style={{
+              fontFamily: 'var(--font-ui)',
+              fontSize: 10,
+              fontWeight: 500,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              color: 'var(--color-text-tertiary)',
+              marginBottom: 6,
+            }}>
+              {new Date(todayKey + 'T12:00:00Z').toLocaleDateString('en-US', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC',
+              })}
+            </p>
+            <h2 style={{
+              fontFamily: 'var(--font-display)',
+              fontStyle: 'italic',
+              fontWeight: 400,
+              fontSize: 'clamp(24px, 5vw, 40px)',
+              color: 'var(--color-text-primary)',
+              lineHeight: 1.15,
+              marginBottom: 6,
+            }}>
+              {artwork?.title || '…'}
+            </h2>
+            <p style={{ fontFamily: 'var(--font-ui)', fontSize: 14, color: 'var(--color-text-secondary)' }}>
+              {artwork?.artist_display?.split('(')[0].trim()}
+            </p>
+            {artwork?.date_display && (
+              <p style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: 'var(--color-text-tertiary)', marginTop: 3 }}>
+                {artwork.date_display}
+              </p>
+            )}
           </div>
+
+          {/* The Original — mirrors Archive */}
+          <div style={{ marginBottom: 32 }}>
+            <p style={{
+              fontFamily: 'var(--font-ui)',
+              fontSize: 10,
+              fontWeight: 500,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              color: 'var(--color-text-tertiary)',
+              marginBottom: 10,
+            }}>
+              The Original
+            </p>
+            {artwork ? (
+              <img
+                src={artwork.image_url}
+                alt={artwork.title}
+                style={{ display: 'block', width: '100%', objectFit: 'contain', maxHeight: '52vh' }}
+              />
+            ) : (
+              <div style={{ aspectRatio: '4/3', background: 'var(--color-surface)', maxHeight: '52vh' }} className="animate-pulse" />
+            )}
+          </div>
+
+          {/* Round complete notice — mirrors Archive's locked notice */}
+          <div style={{
+            marginBottom: 32,
+            padding: '11px 18px',
+            background: 'var(--color-surface)',
+            borderLeft: '3px solid var(--color-border-strong)',
+            fontFamily: 'var(--font-ui)',
+            fontSize: 12,
+            color: 'var(--color-text-tertiary)',
+            letterSpacing: '0.02em',
+          }}>
+            Today's round is complete — come back tomorrow for a new painting.
+          </div>
+
+          {/* Gallery of today's forgeries */}
           <Gallery dayKey={todayKey} artwork={artwork} highlightId={submittedId} />
         </div>
       )}

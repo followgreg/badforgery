@@ -1,7 +1,11 @@
-import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Link, NavLink, useLocation } from 'react-router-dom'
 import Home from './pages/Home'
 import Play from './pages/Play'
 import Archive from './pages/Archive'
+
+function navClass({ isActive }) {
+  return isActive ? 'nav-link nav-link-active' : 'nav-link'
+}
 
 function Header() {
   const { pathname } = useLocation()
@@ -22,7 +26,7 @@ function Header() {
         borderBottom: isHome ? 'none' : '1px solid var(--color-border)',
       }}
     >
-      {/* Logo — only on non-home pages */}
+      {/* Logo — only visible on non-home pages */}
       {!isHome ? (
         <Link to="/" style={{ textDecoration: 'none', lineHeight: 1 }}>
           <span style={{
@@ -41,8 +45,9 @@ function Header() {
       )}
 
       <nav style={{ display: 'flex', gap: 28 }}>
-        <Link to="/play" className="nav-link">Play</Link>
-        <Link to="/" className="nav-link">Archive</Link>
+        <NavLink to="/play" className={navClass}>Play</NavLink>
+        {/* "end" ensures the Archive link is only active on exactly "/" not on /archive/... too */}
+        <NavLink to="/" end className={navClass}>Archive</NavLink>
       </nav>
     </header>
   )
@@ -50,7 +55,6 @@ function Header() {
 
 function Footer() {
   const { pathname } = useLocation()
-  // Hide footer on play page — game must fill the viewport
   if (pathname === '/play') return null
   return (
     <footer style={{

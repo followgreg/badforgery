@@ -67,16 +67,30 @@ body {
 /* ── Nav links ── */
 .nav-link {
   font-family: var(--font-ui);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--color-text-secondary);
+  color: var(--color-text-tertiary);
   text-decoration: none;
-  transition: opacity 0.15s ease;
+  transition: color 0.15s ease;
+  position: relative;
 }
 .nav-link:hover {
-  opacity: 0.45;
+  color: var(--color-text-primary);
+}
+/* Active page indicator — thin gold underline */
+.nav-link-active {
+  color: var(--color-text-primary);
+}
+.nav-link-active::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  background: var(--color-gold);
 }
 
 /* ── Timer pulse ── */
