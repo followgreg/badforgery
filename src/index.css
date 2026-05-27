@@ -1,13 +1,29 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #0f0e0c;
-  --surface: #1a1917;
-  --border: #2e2c29;
-  --text: #f0ede8;
-  --text-muted: #8a877f;
-  --gold: #E8C547;
-  --red: #E24B4A;
+  /* ── New color system ── */
+  --color-bg: #F4F0E8;
+  --color-surface: #EDE8DE;
+  --color-surface-raised: #E8E2D6;
+  --color-border: #C8BFA8;
+  --color-border-strong: #A89880;
+  --color-text-primary: #1A1714;
+  --color-text-secondary: #5C5248;
+  --color-text-tertiary: #8C7E72;
+  --color-gold: #C8A83C;
+  --color-gold-light: #E8C547;
+  --color-pink: #E8507A;
+  --color-danger: #C94040;
+  --color-white: #FDFAF5;
+
+  /* ── Legacy aliases — used by game components (Play, Toolbar, Timer, Gallery, etc.) ── */
+  --bg: #F4F0E8;
+  --surface: #EDE8DE;
+  --border: #C8BFA8;
+  --text: #1A1714;
+  --text-muted: #8C7E72;
+  --gold: #C8A83C;
+  --red: #C94040;
   --font-display: 'Playfair Display', Georgia, serif;
   --font-ui: 'DM Sans', system-ui, sans-serif;
 }
@@ -18,10 +34,16 @@
   padding: 0;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  background-color: var(--bg);
-  color: var(--text);
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
   font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.6;
   min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
 }
@@ -32,38 +54,63 @@ body {
   flex-direction: column;
 }
 
-@keyframes pulse-number {
-  0% { transform: scale(1); }
-  40% { transform: scale(1.12); }
-  100% { transform: scale(1); }
+:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 3px;
 }
 
+::selection {
+  background: var(--color-gold);
+  color: var(--color-text-primary);
+}
+
+/* ── Nav links ── */
+.nav-link {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+.nav-link:hover {
+  opacity: 0.45;
+}
+
+/* ── Timer pulse ── */
+@keyframes pulse-number {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
 .pulse {
   animation: pulse-number 0.6s ease-out;
 }
 
+/* ── Study phase image fade-out ── */
 @keyframes fade-to-black {
   from { opacity: 0; }
-  to { opacity: 1; }
+  to   { opacity: 1; }
 }
-
 .fade-black {
   animation: fade-to-black 1s ease forwards;
 }
 
+/* ── Star rating ── */
 .star-btn {
   transition: transform 0.1s ease;
 }
-
 .star-btn:hover {
   transform: scale(1.2);
 }
 
+/* ── Phase transitions ── */
 .phase-fade {
   animation: phase-in 0.4s ease forwards;
 }
-
 @keyframes phase-in {
   from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: translateY(0); }
 }

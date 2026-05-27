@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import Canvas from '../components/Canvas'
 import Toolbar from '../components/Toolbar'
@@ -119,6 +119,14 @@ export default function Play() {
     }
   }
 
+  // Derive canvas aspect ratio from artwork dimensions; fall back to 4:3
+  const artworkRatio = useMemo(() => {
+    if (artwork?.image_width && artwork?.image_height) {
+      return artwork.image_width / artwork.image_height
+    }
+    return 4 / 3
+  }, [artwork])
+
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 767px)')
@@ -159,12 +167,17 @@ export default function Play() {
                 <div className="w-full aspect-video rounded-2xl animate-pulse" style={{ background: 'var(--surface)' }} />
               )}
               {artwork && (
-                <div className="relative">
+                <div className="relative" style={{ maxHeight: '70vh', aspectRatio: artworkRatio, maxWidth: '100%' }}>
                   <img
                     src={artwork.image_url}
                     alt={artwork.title}
-                    className="rounded-2xl object-contain w-full"
-                    style={{ maxHeight: '70vh', display: artworkLoaded ? 'block' : 'none' }}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'contain',
+                      display: artworkLoaded ? 'block' : 'none',
+                      borderRadius: 4,
+                    }}
                     onLoad={() => setArtworkLoaded(true)}
                   />
                   {showBlack && (
@@ -231,7 +244,7 @@ export default function Play() {
                 brushSize={brushSize}
                 color={color}
                 disabled={drawDisabled}
-                aspectRatio={4 / 3}
+                aspectRatio={artworkRatio}
               />
             </div>
           </div>

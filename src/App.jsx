@@ -6,19 +6,21 @@ import Archive from './pages/Archive'
 function Header() {
   return (
     <header
-      className="flex items-center justify-between px-4 py-4 border-b"
-      style={{ borderColor: 'var(--border)', background: 'var(--bg)' }}
+      style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 10,
+        height: 56,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        padding: '0 32px',
+        background: 'transparent',
+      }}
     >
-      <Link
-        to="/"
-        className="text-2xl font-bold italic transition-opacity hover:opacity-80"
-        style={{ fontFamily: 'var(--font-display)', color: 'var(--gold)' }}
-      >
-        BadForgery
-      </Link>
-      <nav className="flex gap-4 text-sm" style={{ color: 'var(--text-muted)' }}>
-        <Link to="/play" className="hover:text-white transition-colors">Play</Link>
-        <Link to="/" className="hover:text-white transition-colors">Archive</Link>
+      <nav style={{ display: 'flex', gap: 28 }}>
+        <Link to="/play" className="nav-link">Play</Link>
+        <Link to="/" className="nav-link">Archive</Link>
       </nav>
     </header>
   )
@@ -27,17 +29,22 @@ function Header() {
 export default function App() {
   return (
     <BrowserRouter>
-      <div className="flex flex-col min-h-dvh" style={{ background: 'var(--bg)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', background: 'var(--color-bg)' }}>
         <Header />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/play" element={<Play />} />
           <Route path="/archive/:day_key" element={<Archive />} />
         </Routes>
-        <footer
-          className="text-center py-6 text-xs border-t"
-          style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}
-        >
+        <footer style={{
+          textAlign: 'center',
+          padding: '24px 0',
+          fontSize: 12,
+          color: 'var(--color-text-tertiary)',
+          borderTop: '1px solid var(--color-border)',
+          fontFamily: 'var(--font-ui)',
+          letterSpacing: '0.05em',
+        }}>
           BadForgery — attempt greatness badly.
         </footer>
       </div>

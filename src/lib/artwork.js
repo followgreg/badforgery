@@ -37,7 +37,7 @@ export async function fetchArtworkForDay(dayKey) {
           minimum_should_match: 1,
         },
       }),
-      fields: 'id,title,artist_display,date_display,image_id',
+      fields: 'id,title,artist_display,date_display,image_id,thumbnail,image_width,image_height',
       limit: 10,
       page,
     })
@@ -50,6 +50,11 @@ export async function fetchArtworkForDay(dayKey) {
     if (!items.length) throw new Error('No results')
 
     const pick = items[offset % items.length]
+
+    // Prefer dedicated dimension fields, fall back to thumbnail object
+    const imgW = pick.image_width || pick.thumbnail?.width || null
+    const imgH = pick.image_height || pick.thumbnail?.height || null
+
     const artwork = {
       artwork_id: String(pick.id),
       image_id: pick.image_id,
@@ -57,6 +62,8 @@ export async function fetchArtworkForDay(dayKey) {
       artist_display: pick.artist_display || 'Unknown Artist',
       date_display: pick.date_display || '',
       image_url: getImageUrl(pick.image_id),
+      image_width: imgW,
+      image_height: imgH,
       day_key: dayKey,
     }
 
