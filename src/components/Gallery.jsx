@@ -82,24 +82,33 @@ export default function Gallery({ dayKey, artwork, highlightId }) {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 24, gap: 12, flexWrap: 'wrap' }}>
         <div>
-          <h2 className="text-2xl font-semibold" style={{ fontFamily: 'var(--font-display)' }}>
-            Today's Forgeries
+          <h2 style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 400, fontSize: 28, color: 'var(--color-text-primary)', lineHeight: 1.2 }}>
+            The Forgeries
           </h2>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+          <p style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: 'var(--color-text-tertiary)', marginTop: 4 }}>
             {loading ? '…' : `${submissions.length} submission${submissions.length !== 1 ? 's' : ''}`}
           </p>
         </div>
-        <div className="flex gap-1 rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', border: '1px solid var(--color-border)' }}>
           {['newest', 'top'].map(s => (
             <button
               key={s}
               onClick={() => setSort(s)}
-              className="px-3 py-1.5 text-sm font-medium capitalize transition-colors"
               style={{
-                background: sort === s ? 'var(--gold)' : 'transparent',
-                color: sort === s ? '#0f0e0c' : 'var(--text-muted)',
+                padding: '8px 16px',
+                fontFamily: 'var(--font-ui)',
+                fontSize: 11,
+                fontWeight: 500,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                background: sort === s ? 'var(--color-text-primary)' : 'transparent',
+                color: sort === s ? 'var(--color-white)' : 'var(--color-text-tertiary)',
+                border: 'none',
+                borderRadius: 0,
+                cursor: 'pointer',
+                transition: 'background 0.15s ease, color 0.15s ease',
               }}
             >
               {s === 'top' ? 'Top Rated' : 'Newest'}
@@ -112,12 +121,12 @@ export default function Gallery({ dayKey, artwork, highlightId }) {
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="rounded-xl aspect-video animate-pulse" style={{ background: 'var(--surface)' }} />
+            <div key={i} style={{ aspectRatio: '4/3', background: 'var(--color-surface)', borderRadius: 2 }} className="animate-pulse" />
           ))}
         </div>
       ) : sorted.length === 0 ? (
-        <div className="text-center py-16" style={{ color: 'var(--text-muted)' }}>
-          <p className="text-4xl mb-3">🖼️</p>
+        <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-ui)', fontSize: 14 }}>
+          <p style={{ fontSize: 40, marginBottom: 12 }}>🖼️</p>
           <p>No forgeries yet — be the first!</p>
         </div>
       ) : (
@@ -126,19 +135,29 @@ export default function Gallery({ dayKey, artwork, highlightId }) {
             <button
               key={sub.id}
               onClick={() => setSelected(sub)}
-              className="text-left rounded-xl overflow-hidden transition-transform hover:scale-[1.02] focus:outline-none"
-              style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+              style={{
+                textAlign: 'left',
+                background: 'var(--color-surface)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 0,
+                overflow: 'hidden',
+                cursor: 'pointer',
+                transition: 'border-color 0.15s ease',
+                padding: 0,
+              }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-gold)'}
+              onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-border)'}
             >
-              <div className="aspect-video overflow-hidden" style={{ background: '#fff' }}>
+              <div style={{ aspectRatio: '4/3', overflow: 'hidden', background: '#fff' }}>
                 <img
                   src={sub.drawing_data}
                   alt={`Forgery by ${sub.nickname || 'Anonymous'}`}
-                  className="w-full h-full object-cover"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                 />
               </div>
-              <div className="p-3">
-                <p className="font-medium text-sm truncate">{sub.nickname || 'Anonymous Forger'}</p>
-                <p className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>{timeAgo(sub.created_at)}</p>
+              <div style={{ padding: '10px 12px' }}>
+                <p style={{ fontFamily: 'var(--font-ui)', fontWeight: 500, fontSize: 13, color: 'var(--color-text-primary)', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', marginBottom: 2 }}>{sub.nickname || 'Anonymous Forger'}</p>
+                <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: 'var(--color-text-tertiary)', marginBottom: 6 }}>{timeAgo(sub.created_at)}</p>
                 <StarRating avg={sub.avg_rating} count={sub.rating_count} locked size={14} />
               </div>
             </button>

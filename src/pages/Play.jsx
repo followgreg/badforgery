@@ -8,9 +8,94 @@ import { fetchArtworkForDay } from '../lib/artwork'
 import { getTodayKey, getSubmissionId, setSubmissionId, setPlayed } from '../lib/storage'
 import { supabase } from '../lib/supabase'
 
-// PHASES: study → draw → submit → gallery
 const STUDY_SECONDS = 10
 const DRAW_SECONDS = 60
+
+// Shared button style helpers
+const btnPrimary = (disabled) => ({
+  padding: '14px 40px',
+  background: disabled ? 'var(--color-border)' : 'var(--color-text-primary)',
+  color: 'var(--color-white)',
+  fontFamily: 'var(--font-ui)',
+  fontSize: 12,
+  fontWeight: 500,
+  letterSpacing: '0.1em',
+  textTransform: 'uppercase',
+  border: 'none',
+  borderRadius: 0,
+  cursor: disabled ? 'not-allowed' : 'pointer',
+  transition: 'background 0.2s ease, color 0.2s ease',
+})
+
+const btnSecondary = {
+  padding: '12px 28px',
+  background: 'transparent',
+  color: 'var(--color-text-secondary)',
+  fontFamily: 'var(--font-ui)',
+  fontSize: 12,
+  fontWeight: 500,
+  letterSpacing: '0.1em',
+  textTransform: 'uppercase',
+  border: '1px solid var(--color-border)',
+  borderRadius: 0,
+  cursor: 'pointer',
+  transition: 'border-color 0.2s ease, color 0.2s ease',
+}
+
+function PrimaryBtn({ children, onClick, disabled, style }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        ...btnPrimary(disabled),
+        background: hovered && !disabled ? 'var(--color-gold)' : btnPrimary(disabled).background,
+        color: hovered && !disabled ? 'var(--color-text-primary)' : 'var(--color-white)',
+        ...style,
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {children}
+    </button>
+  )
+}
+
+function SecondaryBtn({ children, onClick, style }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        ...btnSecondary,
+        borderColor: hovered ? 'var(--color-gold)' : 'var(--color-border)',
+        color: hovered ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+        ...style,
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {children}
+    </button>
+  )
+}
+
+function EyebrowLabel({ children }) {
+  return (
+    <p style={{
+      fontFamily: 'var(--font-ui)',
+      fontSize: 10,
+      fontWeight: 500,
+      letterSpacing: '0.12em',
+      textTransform: 'uppercase',
+      color: 'var(--color-text-tertiary)',
+      marginBottom: 4,
+    }}>
+      {children}
+    </p>
+  )
+}
 
 export default function Play() {
   const [searchParams] = useSearchParams()
@@ -23,7 +108,6 @@ export default function Play() {
   const [artworkLoaded, setArtworkLoaded] = useState(false)
   const [showBlack, setShowBlack] = useState(false)
   const [readyBtn, setReadyBtn] = useState(false)
-  const [studyComplete, setStudyComplete] = useState(false)
 
   // Draw state
   const [brushType, setBrushType] = useState('round')
@@ -48,13 +132,19 @@ export default function Play() {
     })
   }, [todayKey])
 
+  const artworkRatio = useMemo(() => {
+    if (artwork?.image_width && artwork?.image_height) {
+      return artwork.image_width / artwork.image_height
+    }
+    return 4 / 3
+  }, [artwork])
+
   const handleStudyComplete = useCallback(() => {
     setShowBlack(true)
     setTimeout(() => setReadyBtn(true), 1000)
   }, [])
 
   const handleStartDraw = useCallback(() => {
-    setStudyComplete(true)
     setPhase('draw')
     setPlayed(todayKey)
   }, [todayKey])
@@ -62,7 +152,7 @@ export default function Play() {
   const handleDrawComplete = useCallback(() => {
     setDrawDisabled(true)
     setTimeUp(true)
-    showToast('Time\'s up!')
+    showToast("Time's up!")
   }, [])
 
   function showToast(msg) {
@@ -70,12 +160,10 @@ export default function Play() {
     setTimeout(() => setToast(''), 2500)
   }
 
-  function handleUndo() {
-    canvasRef.current?.undo()
-  }
+  function handleUndo() { canvasRef.current?.undo() }
 
   function handleClear() {
-    if (!window.confirm('Clear the canvas? This can\'t be undone.')) return
+    if (!window.confirm("Clear the canvas? This can't be undone.")) return
     canvasRef.current?.clear()
   }
 
@@ -83,12 +171,10 @@ export default function Play() {
     const drawingData = capturedDataUrl || canvasRef.current?.getDataURL()
     if (!drawingData) return
     if (!supabase) { setSubmitError('Gallery unavailable — submission disabled.'); return }
-
     setSubmitting(true)
     setSubmitError('')
     try {
       if (submittedId) {
-        // Update existing
         const { error } = await supabase
           .from('submissions')
           .update({ drawing_data: drawingData, nickname: nickname.trim() || null })
@@ -119,14 +205,6 @@ export default function Play() {
     }
   }
 
-  // Derive canvas aspect ratio from artwork dimensions; fall back to 4:3
-  const artworkRatio = useMemo(() => {
-    if (artwork?.image_width && artwork?.image_height) {
-      return artwork.image_width / artwork.image_height
-    }
-    return 4 / 3
-  }, [artwork])
-
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 767px)')
@@ -136,55 +214,81 @@ export default function Play() {
   }, [])
 
   return (
-    <main className="flex-1 flex flex-col max-w-5xl mx-auto w-full px-4 py-6">
+    <main style={{
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      maxWidth: 900,
+      margin: '0 auto',
+      width: '100%',
+      padding: isMobile
+        ? '16px 16px max(80px, env(safe-area-inset-bottom, 80px))'
+        : '24px 32px 48px',
+    }}>
+
       {/* Toast */}
       {toast && (
-        <div
-          className="fixed top-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-xl font-medium text-sm shadow-xl"
-          style={{ background: 'var(--gold)', color: '#0f0e0c' }}
-        >
+        <div style={{
+          position: 'fixed',
+          top: 24,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 50,
+          padding: '12px 28px',
+          background: 'var(--color-text-primary)',
+          color: 'var(--color-white)',
+          fontFamily: 'var(--font-ui)',
+          fontSize: 13,
+          fontWeight: 500,
+          letterSpacing: '0.08em',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.12)',
+          whiteSpace: 'nowrap',
+        }}>
           {toast}
         </div>
       )}
 
-      {/* STUDY PHASE */}
+      {/* ── STUDY PHASE ── */}
       {phase === 'study' && (
-        <div className="flex-1 flex flex-col items-center phase-fade">
-          <h2 className="text-3xl font-bold mb-2 text-center" style={{ fontFamily: 'var(--font-display)' }}>
-            Study the Painting
-          </h2>
-          <p className="text-sm mb-6 text-center" style={{ color: 'var(--text-muted)' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }} className="phase-fade">
+          <EyebrowLabel>Study the Painting</EyebrowLabel>
+          <h2 style={{
+            fontFamily: 'var(--font-display)',
+            fontStyle: 'italic',
+            fontWeight: 400,
+            fontSize: 'clamp(26px, 4vw, 36px)',
+            color: 'var(--color-text-primary)',
+            marginBottom: 4,
+            textAlign: 'center',
+          }}>
             Memorize it. You won't see it again.
+          </h2>
+          <p style={{
+            fontFamily: 'var(--font-ui)',
+            fontSize: 13,
+            color: 'var(--color-text-tertiary)',
+            marginBottom: 24,
+          }}>
+            {artwork?.title && `${artwork.title}${artwork.artist_display ? ' · ' + artwork.artist_display.split('(')[0].trim() : ''}`}
           </p>
 
           {artworkError ? (
-            <div className="flex-1 flex items-center justify-center" style={{ color: 'var(--text-muted)' }}>
-              Today's painting couldn't load — try refreshing.
-            </div>
+            <p style={{ color: 'var(--color-text-tertiary)' }}>Today's painting couldn't load — try refreshing.</p>
           ) : (
-            <div className="relative w-full mb-6 flex justify-center">
+            <div style={{ position: 'relative', width: '100%', marginBottom: 24, display: 'flex', justifyContent: 'center' }}>
               {!artworkLoaded && (
-                <div className="w-full aspect-video rounded-2xl animate-pulse" style={{ background: 'var(--surface)' }} />
+                <div style={{ width: '100%', aspectRatio: String(artworkRatio), background: 'var(--color-surface)', borderRadius: 2 }} className="animate-pulse" />
               )}
               {artwork && (
-                <div className="relative" style={{ maxHeight: '70vh', aspectRatio: artworkRatio, maxWidth: '100%' }}>
+                <div style={{ position: 'relative', maxHeight: '65vh', aspectRatio: String(artworkRatio), maxWidth: '100%' }}>
                   <img
                     src={artwork.image_url}
                     alt={artwork.title}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'contain',
-                      display: artworkLoaded ? 'block' : 'none',
-                      borderRadius: 4,
-                    }}
+                    style={{ width: '100%', height: '100%', objectFit: 'contain', display: artworkLoaded ? 'block' : 'none', borderRadius: 2 }}
                     onLoad={() => setArtworkLoaded(true)}
                   />
                   {showBlack && (
-                    <div
-                      className="absolute inset-0 rounded-2xl fade-black"
-                      style={{ background: '#000' }}
-                    />
+                    <div className="absolute inset-0 fade-black" style={{ background: 'var(--color-text-primary)', borderRadius: 2 }} />
                   )}
                 </div>
               )}
@@ -196,159 +300,167 @@ export default function Play() {
           )}
 
           {readyBtn && (
-            <button
-              onClick={handleStartDraw}
-              className="mt-4 px-8 py-4 rounded-2xl text-xl font-semibold transition-all hover:opacity-90 active:scale-95 phase-fade"
-              style={{ background: 'var(--gold)', color: '#0f0e0c', fontFamily: 'var(--font-display)' }}
-            >
-              Ready to Draw →
-            </button>
+            <div className="phase-fade" style={{ marginTop: 16 }}>
+              <PrimaryBtn onClick={handleStartDraw}>Ready to Draw</PrimaryBtn>
+            </div>
           )}
         </div>
       )}
 
-      {/* DRAW PHASE */}
+      {/* ── DRAW PHASE ── */}
       {phase === 'draw' && (
-        <div className="flex-1 flex flex-col phase-fade">
-          <div className="flex items-center justify-between mb-4">
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }} className="phase-fade">
+
+          {/* Header row */}
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
             <div>
-              <p className="text-xs uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Drawing from memory</p>
-              <p className="font-semibold" style={{ fontFamily: 'var(--font-display)' }}>{artwork?.title}</p>
+              <EyebrowLabel>Drawing from memory</EyebrowLabel>
+              <p style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 18, color: 'var(--color-text-primary)' }}>
+                {artwork?.title}
+              </p>
             </div>
-            {!timeUp && (
-              <Timer seconds={DRAW_SECONDS} onComplete={handleDrawComplete} size="sm" />
-            )}
-            {timeUp && (
-              <span className="text-sm font-bold" style={{ color: 'var(--red)' }}>TIME'S UP</span>
-            )}
+            {!timeUp
+              ? <Timer seconds={DRAW_SECONDS} onComplete={handleDrawComplete} size="sm" />
+              : <span style={{ fontFamily: 'var(--font-ui)', fontSize: 11, fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-danger)' }}>Time's Up</span>
+            }
           </div>
 
-          {/* Canvas + Toolbar layout */}
-          <div className={`flex ${isMobile ? 'flex-col-reverse' : 'flex-row'} gap-3 flex-1`}>
-            {/* Toolbar */}
-            <Toolbar
-              brushType={brushType} setBrushType={setBrushType}
-              brushSize={brushSize} setBrushSize={setBrushSize}
-              color={color} setColor={setColor}
-              onUndo={handleUndo}
-              onClear={handleClear}
-              disabled={drawDisabled}
-              orientation={isMobile ? 'horizontal' : 'vertical'}
-            />
+          {/* Canvas + Toolbar */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: 12,
+            flex: 1,
+          }}>
+            {/* On mobile: canvas first, toolbar below */}
+            {!isMobile && (
+              <Toolbar
+                brushType={brushType} setBrushType={setBrushType}
+                brushSize={brushSize} setBrushSize={setBrushSize}
+                color={color} setColor={setColor}
+                onUndo={handleUndo} onClear={handleClear}
+                disabled={drawDisabled}
+                orientation="vertical"
+              />
+            )}
 
-            {/* Canvas area */}
-            <div className="flex-1 min-w-0">
+            <div style={{ flex: 1, minWidth: 0 }}>
               <Canvas
                 ref={canvasRef}
-                brushType={brushType}
-                brushSize={brushSize}
-                color={color}
-                disabled={drawDisabled}
-                aspectRatio={artworkRatio}
+                brushType={brushType} brushSize={brushSize} color={color}
+                disabled={drawDisabled} aspectRatio={artworkRatio}
               />
             </div>
+
+            {isMobile && (
+              <div style={{ overflowX: 'auto', paddingBottom: 4 }}>
+                <Toolbar
+                  brushType={brushType} setBrushType={setBrushType}
+                  brushSize={brushSize} setBrushSize={setBrushSize}
+                  color={color} setColor={setColor}
+                  onUndo={handleUndo} onClear={handleClear}
+                  disabled={drawDisabled}
+                  orientation="horizontal"
+                />
+              </div>
+            )}
           </div>
 
           {timeUp && (
-            <div className="mt-4 text-center phase-fade">
-              <button
-                onClick={() => { setCapturedDataUrl(canvasRef.current?.getDataURL()); setPhase('submit') }}
-                className="px-8 py-4 rounded-2xl text-xl font-semibold transition-all hover:opacity-90 active:scale-95"
-                style={{ background: 'var(--gold)', color: '#0f0e0c', fontFamily: 'var(--font-display)' }}
-              >
-                Submit Your Forgery →
-              </button>
+            <div style={{ marginTop: 20, textAlign: 'center' }} className="phase-fade">
+              <PrimaryBtn onClick={() => { setCapturedDataUrl(canvasRef.current?.getDataURL()); setPhase('submit') }}>
+                Submit Your Forgery
+              </PrimaryBtn>
             </div>
           )}
         </div>
       )}
 
-      {/* SUBMIT PHASE */}
+      {/* ── SUBMIT PHASE ── */}
       {phase === 'submit' && (
-        <div className="flex-1 flex flex-col items-center phase-fade">
-          <h2 className="text-3xl font-bold mb-2" style={{ fontFamily: 'var(--font-display)' }}>
-            Your Forgery
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }} className="phase-fade">
+          <EyebrowLabel>Your Forgery</EyebrowLabel>
+          <h2 style={{
+            fontFamily: 'var(--font-display)',
+            fontStyle: 'italic',
+            fontWeight: 400,
+            fontSize: 'clamp(28px, 4vw, 40px)',
+            color: 'var(--color-text-primary)',
+            marginBottom: 6,
+            textAlign: 'center',
+          }}>
+            {submittedId ? 'Update your masterpiece' : 'Ready to confess?'}
           </h2>
-          <p className="text-sm mb-8" style={{ color: 'var(--text-muted)' }}>
-            {submittedId ? 'Update your forgery or keep what you have.' : 'Post it to the global gallery.'}
+          <p style={{ fontFamily: 'var(--font-ui)', fontSize: 14, color: 'var(--color-text-tertiary)', marginBottom: 32 }}>
+            {submittedId ? 'Replace your forgery or leave it as is.' : 'Post it to the global gallery.'}
           </p>
 
-          {/* Side by side comparison */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mb-8">
+          {/* Side by side */}
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 24, width: '100%', marginBottom: 32 }}>
             <div>
-              <p className="text-xs uppercase tracking-wider mb-2 text-center" style={{ color: 'var(--text-muted)' }}>The Original</p>
+              <EyebrowLabel>The Original</EyebrowLabel>
               {artwork?.image_url && (
-                <img src={artwork.image_url} alt={artwork.title} className="w-full rounded-xl object-contain" style={{ maxHeight: 300 }} />
+                <img src={artwork.image_url} alt={artwork.title} style={{ width: '100%', objectFit: 'contain', maxHeight: 280, borderRadius: 2 }} />
               )}
-              <p className="text-center text-sm mt-2" style={{ fontFamily: 'var(--font-display)' }}>{artwork?.title}</p>
+              <p style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 14, color: 'var(--color-text-secondary)', marginTop: 8, textAlign: 'center' }}>
+                {artwork?.title}
+              </p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-wider mb-2 text-center" style={{ color: 'var(--text-muted)' }}>Your Forgery</p>
+              <EyebrowLabel>Your Forgery</EyebrowLabel>
               <img
                 src={capturedDataUrl}
                 alt="Your drawing"
-                className="w-full rounded-xl"
-                style={{ maxHeight: 300, objectFit: 'contain', background: '#fff' }}
+                style={{ width: '100%', objectFit: 'contain', maxHeight: 280, borderRadius: 2, background: '#fff' }}
               />
             </div>
           </div>
 
           {/* Nickname */}
-          <div className="w-full max-w-md mb-4">
+          <div style={{ width: '100%', maxWidth: 400, marginBottom: 8 }}>
             <input
               type="text"
               placeholder="Anonymous Forger"
               value={nickname}
               onChange={e => setNickname(e.target.value.slice(0, 20))}
               maxLength={20}
-              className="w-full px-4 py-3 rounded-xl text-base outline-none"
               style={{
-                background: 'var(--surface)',
-                border: '1px solid var(--border)',
-                color: 'var(--text)',
+                width: '100%',
+                padding: '12px 16px',
+                background: 'var(--color-surface)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 0,
+                fontFamily: 'var(--font-ui)',
+                fontSize: 15,
+                color: 'var(--color-text-primary)',
+                outline: 'none',
               }}
             />
-            <p className="text-xs mt-1 text-right" style={{ color: 'var(--text-muted)' }}>{nickname.length}/20</p>
+            <p style={{ fontFamily: 'var(--font-ui)', fontSize: 11, color: 'var(--color-text-tertiary)', textAlign: 'right', marginTop: 4 }}>
+              {nickname.length}/20
+            </p>
           </div>
 
           {submitError && (
-            <p className="text-sm mb-3" style={{ color: 'var(--red)' }}>{submitError}</p>
+            <p style={{ fontFamily: 'var(--font-ui)', fontSize: 13, color: 'var(--color-danger)', marginBottom: 12 }}>{submitError}</p>
           )}
 
-          <div className="flex gap-3">
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
             {submittedId && (
-              <button
-                onClick={() => setPhase('gallery')}
-                className="px-6 py-3 rounded-xl font-medium text-base"
-                style={{ background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border)' }}
-              >
-                See Gallery
-              </button>
+              <SecondaryBtn onClick={() => setPhase('gallery')}>See Gallery</SecondaryBtn>
             )}
-            <button
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="px-8 py-3 rounded-xl font-semibold text-base transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
-              style={{ background: 'var(--gold)', color: '#0f0e0c' }}
-            >
+            <PrimaryBtn onClick={handleSubmit} disabled={submitting}>
               {submitting ? 'Posting…' : submittedId ? 'Update My Forgery' : 'Post to Gallery'}
-            </button>
+            </PrimaryBtn>
           </div>
         </div>
       )}
 
-      {/* GALLERY PHASE */}
+      {/* ── GALLERY PHASE ── */}
       {phase === 'gallery' && (
         <div className="phase-fade">
-          <div className="flex items-center justify-between mb-8">
-            <div />
-            <button
-              onClick={() => setPhase('submit')}
-              className="text-sm px-4 py-2 rounded-lg"
-              style={{ background: 'var(--surface)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}
-            >
-              ← Edit My Forgery
-            </button>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 24 }}>
+            <SecondaryBtn onClick={() => setPhase('submit')}>← Edit My Forgery</SecondaryBtn>
           </div>
           <Gallery dayKey={todayKey} artwork={artwork} highlightId={submittedId} />
         </div>
