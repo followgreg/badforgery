@@ -30,6 +30,26 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <!-- Clear expired Supabase auth tokens on every page load.
+         Stale tokens in Chrome's localStorage cause auth.getSession() to hang,
+         which blocks the app from rendering and freezes the sign-in button.
+         CRITICAL: never touches keys starting with 'artwork_' (artwork cache). -->
+    <script>
+      try {
+        Object.keys(localStorage)
+          .filter(function(k) { return k.startsWith('sb-') && k.includes('auth'); })
+          .forEach(function(key) {
+            try {
+              var val = JSON.parse(localStorage.getItem(key));
+              if (!val || (val.expires_at && val.expires_at * 1000 < Date.now())) {
+                localStorage.removeItem(key);
+              }
+            } catch(e) {
+              localStorage.removeItem(key);
+            }
+          });
+      } catch(e) {}
+    </script>
     <!-- Google AdSense -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2168282760431730"
       crossorigin="anonymous"></script>
@@ -41,7 +61,7 @@
       gtag('js', new Date());
       gtag('config', 'G-76P6CXGKXF');
     </script>
-    <script type="module" crossorigin src="/assets/index.BXKc_JJ_.js"></script>
+    <script type="module" crossorigin src="/assets/index.CV_WrO_t.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index.1BwMwpPJ.css">
   </head>
   <body>
