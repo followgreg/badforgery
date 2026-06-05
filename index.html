@@ -61,7 +61,7 @@
       gtag('js', new Date());
       gtag('config', 'G-76P6CXGKXF');
     </script>
-    <script type="module" crossorigin src="/assets/index.CV_WrO_t.js"></script>
+    <script type="module" crossorigin src="/assets/index.CZoHa_Iu.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index.1BwMwpPJ.css">
   </head>
   <body>
@@ -73,5 +73,19 @@
       }
     </script>
     <div id="root"></div>
+    <script>
+      if ('serviceWorker' in navigator) {
+        // Unregister any existing service workers first so the fresh SW
+        // takes effect immediately without waiting for the old one to expire.
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          registrations.forEach(function(reg) { reg.unregister(); });
+        });
+        // Register the network-first service worker after page load
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js')
+            .catch(function(err) { console.warn('SW registration failed:', err); });
+        });
+      }
+    </script>
   </body>
 </html>
